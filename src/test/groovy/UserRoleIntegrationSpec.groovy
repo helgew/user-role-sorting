@@ -77,7 +77,7 @@ class UserRoleIntegrationSpec extends Specification {
         }.list()
 
         then: "an exception will be thrown"
-        def e = thrown(NullPointerException)
+        thrown(NullPointerException)
     }
 
     void "Test using aliases with inList"() {
@@ -87,6 +87,21 @@ class UserRoleIntegrationSpec extends Specification {
             createAlias('user', 'user')
             inList('role.authority', ['ROLE_ADMIN', 'ROLE_STAFF'])
             order('role.authority', 'asc')
+        }.list()
+
+        then: "all is well"
+        noExceptionThrown()
+    }
+
+    // This test illustrates another possible work-around but the approach
+    // requires additional logic when the sort column is passed in dynamically
+    void "Test querying and sorting by username with closure"() {
+        when: "we execute a query by username and sort by role"
+        UserRole.where {
+            user {
+                username in ['admin', 'staff']
+                order('username', 'asc')
+            }
         }.list()
 
         then: "all is well"

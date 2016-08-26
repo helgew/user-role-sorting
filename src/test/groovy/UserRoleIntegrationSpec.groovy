@@ -66,4 +66,30 @@ class UserRoleIntegrationSpec extends Specification {
         def e = thrown(QueryException)
         e.message == 'could not resolve property: user.username of: com.example.UserRole'
     }
+
+    void "Test using aliases"() {
+        when: "we include an alias for each table"
+        UserRole.where {
+            createAlias('role', 'role')
+            createAlias('user', 'user')
+            role.authority in ['ROLE_ADMIN', 'ROLE_STAFF']
+            order('role.authority', 'asc')
+        }.list()
+
+        then: "an exception will be thrown"
+        def e = thrown(NullPointerException)
+    }
+
+    void "Test using aliases with inList"() {
+        when: "we include an alias for each table and use inList"
+        UserRole.where {
+            createAlias('role', 'role')
+            createAlias('user', 'user')
+            inList('role.authority', ['ROLE_ADMIN', 'ROLE_STAFF'])
+            order('role.authority', 'asc')
+        }.list()
+
+        then: "all is well"
+        noExceptionThrown()
+    }
 }

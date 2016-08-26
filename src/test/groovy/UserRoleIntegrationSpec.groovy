@@ -10,6 +10,9 @@ import spock.lang.Specification
 @Integration
 @Transactional
 class UserRoleIntegrationSpec extends Specification {
+    UserRole adminAdminRole
+    UserRole staffStaffRole
+
     def setup() {
         User admin = new User(username: 'admin', password: 'password').save()
         User staff = new User(username: 'staff', password: 'password').save()
@@ -17,94 +20,99 @@ class UserRoleIntegrationSpec extends Specification {
         Role adminRole = new Role(authority: 'ROLE_ADMIN').save()
         Role staffRole = new Role(authority: 'ROLE_STAFF').save()
 
-        UserRole.create admin, adminRole
-        UserRole.create staff, staffRole
+        adminAdminRole = UserRole.create admin, adminRole
+        staffStaffRole = UserRole.create staff, staffRole
     }
 
     void "Test sorting by role.authority"() {
         when: "we execute a query that orders by role.authority"
-        UserRole.where {
+        List<UserRole> l = UserRole.where {
             role.authority in ['ROLE_ADMIN', 'ROLE_STAFF']
-            order('role.authority', 'asc')
+            order('role.authority', 'desc')
         }.list()
 
-        then: "an exception will be thrown"
-        def e = thrown(QueryException)
-        e.message == 'could not resolve property: role.authority of: com.example.UserRole'
+        then: "we have a sorted list"
+        l.size() == 2
+        l[0].id == staffStaffRole.id
     }
 
     void "Test sorting by user.username"() {
         when: "we execute a query that orders by user.username"
-        UserRole.where {
+        List<UserRole> l = UserRole.where {
             role.authority in ['ROLE_ADMIN', 'ROLE_STAFF']
-            order('user.username', 'asc')
+            order('user.username', 'desc')
         }.list()
 
-        then: "all is well"
-        noExceptionThrown()
+        then: "we have a sorted list"
+        l.size() == 2
+        l[0].id == staffStaffRole.id
     }
 
     void "Test querying by username first"() {
         when: "we execute a query by username and sort by role"
-        UserRole.where {
+        List<UserRole> l = UserRole.where {
             user.username in ['admin', 'staff']
-            order('role.authority', 'asc')
+            order('role.authority', 'desc')
         }.list()
 
-        then: "all is well"
-        noExceptionThrown()
+        then: "we have a sorted list"
+        l.size() == 2
+        l[0].id == staffStaffRole.id
     }
 
     void "Test querying and sorting by username"() {
         when: "we execute a query by username and sort by role"
-        UserRole.where {
+        List<UserRole> l = UserRole.where {
             user.username in ['admin', 'staff']
-            order('user.username', 'asc')
+            order('user.username', 'desc')
         }.list()
 
-        then: "an exception will be thrown"
-        def e = thrown(QueryException)
-        e.message == 'could not resolve property: user.username of: com.example.UserRole'
+        then: "we have a sorted list"
+        l.size() == 2
+        l[0].id == staffStaffRole.id
     }
 
     void "Test using aliases"() {
         when: "we include an alias for each table"
-        UserRole.where {
+        List<UserRole> l = UserRole.where {
             createAlias('role', 'role')
             createAlias('user', 'user')
             role.authority in ['ROLE_ADMIN', 'ROLE_STAFF']
-            order('role.authority', 'asc')
+            order('role.authority', 'desc')
         }.list()
 
-        then: "an exception will be thrown"
-        thrown(NullPointerException)
+        then: "we have a sorted list"
+        l.size() == 2
+        l[0].id == staffStaffRole.id
     }
 
     void "Test using aliases with inList"() {
         when: "we include an alias for each table and use inList"
-        UserRole.where {
+        List<UserRole> l = UserRole.where {
             createAlias('role', 'role')
             createAlias('user', 'user')
             inList('role.authority', ['ROLE_ADMIN', 'ROLE_STAFF'])
-            order('role.authority', 'asc')
+            order('role.authority', 'desc')
         }.list()
 
-        then: "all is well"
-        noExceptionThrown()
+        then: "we have a sorted list"
+        l.size() == 2
+        l[0].id == staffStaffRole.id
     }
 
     // This test illustrates another possible work-around but the approach
     // requires additional logic when the sort column is passed in dynamically
     void "Test querying and sorting by username with closure"() {
         when: "we execute a query by username and sort by role"
-        UserRole.where {
+        List<UserRole> l = UserRole.where {
             user {
                 username in ['admin', 'staff']
-                order('username', 'asc')
+                order('username', 'desc')
             }
         }.list()
 
-        then: "all is well"
-        noExceptionThrown()
+        then: "we have a sorted list"
+        l.size() == 2
+        l[0].id == staffStaffRole.id
     }
 }

@@ -43,4 +43,27 @@ class UserRoleIntegrationSpec extends Specification {
         then: "all is well"
         noExceptionThrown()
     }
+
+    void "Test querying by username first"() {
+        when: "we execute a query by username and sort by role"
+        UserRole.where {
+            user.username in ['admin', 'staff']
+            order('role.authority', 'asc')
+        }.list()
+
+        then: "all is well"
+        noExceptionThrown()
+    }
+
+    void "Test querying and sorting by username"() {
+        when: "we execute a query by username and sort by role"
+        UserRole.where {
+            user.username in ['admin', 'staff']
+            order('user.username', 'asc')
+        }.list()
+
+        then: "an exception will be thrown"
+        def e = thrown(QueryException)
+        e.message == 'could not resolve property: user.username of: com.example.UserRole'
+    }
 }
